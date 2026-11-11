@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: OficioCR
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/oficiocr_db
+    username: postgres
+    password: Rostranruiz2106
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
