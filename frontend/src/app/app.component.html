@@ -1,0 +1,26 @@
+<header class="topbar">
+  <a class="brand" routerLink="/trabajos"><span class="brand-icon">✦</span> Oficio<span>CR</span></a>
+  <nav>
+    <a routerLink="/trabajos">Buscar trabajos</a>
+    <button class="theme-toggle" type="button" (click)="toggleTheme()" [attr.aria-label]="theme === 'light' ? 'Activar modo oscuro' : 'Activar modo claro'">{{ theme === 'light' ? '☾' : '☀' }}<span>{{ theme === 'light' ? 'Oscuro' : 'Claro' }}</span></button>
+    @if (auth.user; as user) {
+      <span class="welcome">Hola, {{ user.name }}</span>
+      <a routerLink="/perfil">Mi perfil</a>
+      @if (user.role === 'superusuario') { <a routerLink="/admin">Panel</a> }
+      <button class="link-button" (click)="auth.logout()">Salir</button>
+    } @else {
+      <a routerLink="/login">Iniciar sesión</a>
+      <a class="nav-register" routerLink="/registro">Crear cuenta</a>
+    }
+  </nav>
+</header>
+<main><router-outlet /></main>
+<div class="toast-stack" aria-live="polite" aria-atomic="false">
+  @for (toast of (toasts.messages$ | async) ?? []; track toast.id) {
+    <div class="toast toast-{{ toast.kind }}" [attr.role]="toast.kind === 'error' ? 'alert' : 'status'">
+      <span class="toast-icon">{{ toast.kind === 'error' ? '!' : (toast.kind === 'success' ? '✓' : 'i') }}</span>
+      <span>{{ toast.message }}</span><button type="button" (click)="toasts.dismiss(toast.id)" aria-label="Cerrar aviso">×</button>
+    </div>
+  }
+</div>
+<footer>Conectamos talento con oportunidades <span>·</span> OficioCR</footer>

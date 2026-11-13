@@ -1,0 +1,48 @@
+<section class="dashboard">
+  <div class="dashboard-top">
+    <div>
+      <div class="eyebrow">OFICIOCR · ESPACIO PERSONAL</div>
+      <h1>Hola, {{ auth.user?.name }}</h1>
+      <p>Tu sesión está protegida y caduca a los 30 minutos.</p>
+    </div>
+    <span class="role-badge">{{ auth.user?.role }}</span>
+  </div>
+
+  @if (auth.user?.role === 'superusuario') {
+    <div class="users-panel">
+      <div class="users-heading">
+        <div><h2>Usuarios registrados</h2><p>Administración de cuentas de OficioCR</p></div>
+        <span>{{ users.length }} usuarios</span>
+      </div>
+      <section class="operator-create">
+        <h3>Registrar operador</h3><p>Solo el superusuario puede crear cuentas de operador.</p>
+        <form class="operator-form" [formGroup]="operatorForm" (ngSubmit)="createOperator()">
+          <input formControlName="name" placeholder="Nombre completo" aria-label="Nombre del operador">
+          <input formControlName="email" type="email" placeholder="correo@ejemplo.com" aria-label="Correo del operador">
+          <input formControlName="password" type="password" placeholder="Contraseña segura" aria-label="Contraseña inicial">
+          <button class="button-primary" [disabled]="operatorForm.invalid">Crear operador</button>
+        </form>
+      </section>
+      @if (error) { <div class="notice error">{{ error }}</div> }
+      @if (loading) { <p>Cargando usuarios…</p> }
+      @else {
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nombre</th><th>Correo</th><th>Perfil</th><th>Registro</th></tr></thead>
+            <tbody>
+              @for (user of users; track user.id) {
+                <tr><td>{{ user.name }}</td><td>{{ user.email }}</td><td><span class="role-badge">{{ user.role }}</span></td><td>{{ user.createdAt | date:'mediumDate' }}</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="dashboard-card">
+      <span class="role-icon">✳</span>
+      <h2>Tu espacio está listo</h2>
+      <p>Has iniciado sesión correctamente como <strong>{{ auth.user?.role }}</strong>. Tu perfil y las herramientas disponibles se conectarán aquí.</p>
+    </div>
+  }
+</section>
