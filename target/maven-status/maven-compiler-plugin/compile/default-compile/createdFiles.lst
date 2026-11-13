@@ -1,0 +1,9 @@
+com\example\oficiocr\model\Categoria.class
+com\example\oficiocr\repository\CategoriaRepository.class
+com\example\oficiocr\service\CategoriaService.class
+com\example\oficiocr\dto\CategoriaDTO.class
+com\example\oficiocr\mappers\CategoriaMapperImpl.class
+com\example\oficiocr\model\Servicio.class
+com\example\oficiocr\mappers\CategoriaMapper.class
+com\example\oficiocr\controllers\CategoriaController.class
+com\example\oficiocr\OficioCrApplication.class
