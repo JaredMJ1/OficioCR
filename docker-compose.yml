@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: oficiocr-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-oficiocr}
+      POSTGRES_USER: ${POSTGRES_USER:-oficiocr}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oficiocr_local}
+    ports:
+      - "5432:5432"
+    volumes:
+      - oficiocr-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  api:
+    build: ./backend/OficioCR.Api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: Host=postgres;Port=5432;Database=${POSTGRES_DB:-oficiocr};Username=${POSTGRES_USER:-oficiocr};Password=${POSTGRES_PASSWORD:-oficiocr_local}
+      SUPERUSER_EMAIL: ${SUPERUSER_EMAIL:-admin@oficiocr.local}
+      SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD:-AdminOficioCR!2026}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:4200,http://127.0.0.1:4200}
+      ENABLE_TEST_ENDPOINTS: ${ENABLE_TEST_ENDPOINTS:-true}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SSL: ${SMTP_SSL:-true}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "7001:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+volumes:
+  oficiocr-data:

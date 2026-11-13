@@ -1,0 +1,33 @@
+﻿<main class="jobs-page">
+  <section class="jobs-hero">
+    <div class="eyebrow">OFICIOS Y OPORTUNIDADES</div>
+    <h1>Encuentra trabajo.<br><em>Publica lo que necesitas.</em></h1>
+    <p>Conecta con personas y oportunidades cerca de ti.</p>
+    <form class="job-search" (submit)="$event.preventDefault(); load()">
+      <input name="search" [(ngModel)]="search" placeholder="Oficio, servicio o ubicaciÃ³n" aria-label="Buscar anuncios" />
+      <button class="button-primary" type="submit">Buscar</button>
+    </form>
+    <button class="button-outline" type="button" (click)="showForm = !showForm">{{ showForm ? 'Cerrar formulario' : 'ï¼‹ Publicar anuncio' }}</button>
+  </section>
+
+  @if (showForm) {
+    <section class="job-form-card">
+      <div class="section-kicker">NUEVO ANUNCIO</div><h2>CuÃ©ntale a la comunidad quÃ© necesitas</h2>
+      <form [formGroup]="form" (ngSubmit)="publish()" class="job-form">
+        <label>TÃ­tulo<input formControlName="title" placeholder="Ej. Busco electricista para instalaciÃ³n" /></label>
+        <div class="form-row"><label>Oficio o categorÃ­a<input formControlName="category" placeholder="Electricidad" /></label><label>UbicaciÃ³n<input formControlName="location" placeholder="San JosÃ©" /></label></div>
+        <label>DescripciÃ³n<textarea formControlName="description" rows="4" placeholder="Describe el trabajo o servicio que buscas"></textarea></label>
+        <button class="button-primary" [disabled]="form.invalid">Publicar anuncio</button>
+      </form>
+    </section>
+  }
+
+  <section class="listing-section">
+    <div class="listing-heading"><div><div class="section-kicker">COMUNIDAD OFICIOCR</div><h2>Anuncios recientes</h2></div><span>{{ listings.length }} resultados</span></div>
+    @if (loading) { <div class="empty-state">Cargando oportunidadesâ€¦</div> }
+    @else if (!listings.length) { <div class="empty-state"><span>âŒ•</span><h3>AÃºn no hay anuncios</h3><p>Prueba otra bÃºsqueda o publica la primera oportunidad.</p></div> }
+    @else { <div class="listing-grid">@for (item of listings; track item.id) {
+      <article class="listing-card"><div class="listing-meta"><span class="category-pill">{{ item.category }}</span><time>{{ item.createdAt | date:'mediumDate' }}</time></div><h3>{{ item.title }}</h3><p>{{ item.description }}</p><div class="listing-footer"><span>âŒ– {{ item.location }}</span><span>Publicado por {{ item.authorName }}</span></div>@if (item.acceptedByName) { <div class="job-accepted">Trabajo aceptado por {{ item.acceptedByName }}</div> } @else if (auth.user?.id !== item.authorId) { <button class="button-primary job-accept" type="button" (click)="accept(item)">Aceptar trabajo</button> }</article>
+    }</div> }
+  </section>
+</main>

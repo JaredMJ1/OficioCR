@@ -1,0 +1,36 @@
+﻿<section class="auth-layout">
+  <div class="intro">
+    <div class="eyebrow"><span></span> OPORTUNIDADES QUE CONECTAN</div>
+    <h1>El siguiente paso<br>en tu <em>camino</em><br>profesional.</h1>
+    <p>Un espacio para encontrar talento, crecer y hacer que las cosas sucedan.</p>
+    <div class="intro-note"><span>âœ¦</span><div><strong>Una comunidad hecha para avanzar</strong><small>Personas y oportunidades en un mismo lugar.</small></div></div>
+    <div class="decor decor-one"></div><div class="decor decor-two"></div>
+  </div>
+  <div class="form-side"><div class="form-card">
+    <div class="form-heading"><div class="mini-mark">âœ¦</div><div class="eyebrow">{{ isRegister ? 'EMPIEZA HOY' : 'QUÃ‰ BUENO VERTE' }}</div><h2>{{ isRegister ? 'Crea tu cuenta' : 'Inicia sesiÃ³n' }}</h2><p>{{ isRegister ? 'Ãšnete a OficioCR y encuentra tu lugar.' : 'Accede a tu cuenta de OficioCR.' }}</p></div>
+    @if (error) { <div class="notice error" role="alert">{{ error }}</div> }
+    @if (success) { <div class="notice success" role="status">{{ success }}</div> }
+    <form name="oficioCrAuthForm" autocomplete="on" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (isRegister) {
+        <label class="field-label" for="name">Nombre completo</label>
+        <input id="name" name="name" type="text" formControlName="name" placeholder="Tu nombre" autocomplete="name" required maxlength="120">
+        @if (form.controls.name.touched && form.controls.name.invalid) { <small class="field-error">Escribe tu nombre (mÃ¡ximo 120 caracteres).</small> }
+
+      }
+      <label class="field-label" for="email">Correo electrÃ³nico</label>
+      <input id="email" name="email" type="email" formControlName="email" placeholder="nombre@correo.com" autocomplete="email" required maxlength="254" pattern="[^\s@]+@[^\s@]+\.[^\s@]{2,}">
+      @if (form.controls.email.touched && form.controls.email.invalid) { <small class="field-error">Introduce un correo vÃ¡lido.</small> }
+      <label class="field-label password-label" for="password">ContraseÃ±a @if (isRegister) { <span>Requisitos indicados abajo</span> }</label>
+      <div class="password-input"><input id="password" name="password" [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" [attr.autocomplete]="isRegister ? 'new-password' : 'current-password'" [attr.minlength]="isRegister ? 10 : null" maxlength="128" required><button type="button" class="password-toggle" (click)="showPassword = !showPassword" [attr.aria-label]="showPassword ? 'Ocultar contraseÃ±a' : 'Mostrar contraseÃ±a'">{{ showPassword ? 'Ocultar' : 'Mostrar' }}</button></div>
+      @if (isRegister) {
+        <ul class="password-rules" aria-label="Requisitos de la contraseÃ±a">@for (rule of passwordRules; track rule.label) { <li [class.met]="rule.valid"><span>{{ rule.valid ? 'âœ“' : 'â—‹' }}</span>{{ rule.label }}</li> }</ul>
+        <label class="field-label" for="confirmPassword">Confirma tu contraseÃ±a</label>
+        <input id="confirmPassword" name="confirmPassword" type="password" formControlName="confirmPassword" placeholder="Vuelve a escribir la contraseÃ±a" autocomplete="new-password" maxlength="128" required>
+        @if (form.controls.confirmPassword.touched && !passwordsMatch) { <small class="field-error">Las contraseÃ±as no coinciden.</small> }
+      }
+      <button class="submit-button" type="submit" [disabled]="busy">{{ busy ? 'Un momentoâ€¦' : (isRegister ? 'Crear mi cuenta' : 'Entrar a mi cuenta') }} <span>â†’</span></button>
+    </form>
+    <div class="switch-auth">{{ isRegister ? 'Â¿Ya tienes una cuenta?' : 'Â¿AÃºn no tienes cuenta?' }} <a [routerLink]="isRegister ? '/login' : '/registro'">{{ isRegister ? 'Inicia sesiÃ³n' : 'RegÃ­strate' }}</a></div>
+    <div class="security"><span>â™§</span> Tus datos estÃ¡n protegidos y cifrados.</div>
+  </div></div>
+</section>

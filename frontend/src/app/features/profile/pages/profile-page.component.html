@@ -1,0 +1,17 @@
+<main class="profile-page">
+  <div class="profile-heading"><span class="section-kicker">TU CUENTA</span><h1>Mi perfil</h1><p>Consulta y actualiza tus datos personales.</p></div>
+  @if (auth.user; as user) {
+    <section class="profile-card">
+      <div class="profile-avatar">{{ user.name.slice(0, 1).toUpperCase() }}</div>
+      <div class="profile-summary"><h2>{{ user.name }}</h2><span class="category-pill">Cuenta activa</span></div>
+      <form [formGroup]="form" (ngSubmit)="save()" class="job-form profile-form">
+        <label>Nombre completo<input formControlName="name" autocomplete="name" maxlength="120"></label>
+        <label>Correo electrónico<input formControlName="email" type="email" autocomplete="email" maxlength="254"></label>
+        @if (form.controls.name.touched && form.controls.name.invalid) { <small class="field-error">Escribe un nombre válido.</small> }
+        @if (form.controls.email.touched && form.controls.email.invalid) { <small class="field-error">Escribe un correo válido.</small> }
+        <button class="button-primary" type="submit" [disabled]="saving || form.invalid">{{ saving ? 'Guardando…' : 'Guardar cambios' }}</button>
+      </form>
+      <p class="profile-hint">Con esta cuenta puedes publicar anuncios y aceptar trabajos.</p>
+    </section>
+  } @else { <div class="empty-state">Cargando tu perfil…</div> }
+</main>
