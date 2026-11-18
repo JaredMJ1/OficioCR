@@ -1,6 +1,6 @@
 ﻿# Backend de OficioCR
 
-API ASP.NET Core 8 con PostgreSQL y Entity Framework Core. El backend valida las solicitudes, aplica permisos y guarda los datos. La sesión se autentica con cookies; no se usan JWT.
+API Spring Boot 3 con Java 21, Spring Security, Spring Data JPA y PostgreSQL. El backend valida las solicitudes, aplica permisos y guarda los datos. La sesión se autentica con cookies; no se usan JWT.
 
 ## Ejecutar
 
@@ -10,7 +10,7 @@ Desde la raíz del proyecto:
 docker compose up --build
 ```
 
-La API escucha en `http://localhost:7001/api`. La conexión de base de datos se configura con `ConnectionStrings:OficioCR` o `DATABASE_URL`. El origen del frontend se configura con `FRONTEND_ORIGIN`.
+La API escucha en `http://localhost:7001/api`. La conexión de base de datos se configura con `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` y `SPRING_DATASOURCE_PASSWORD` (Docker los prepara). El origen del frontend se configura con `FRONTEND_ORIGIN`.
 
 ## Cómo funciona la sesión con cookies
 
@@ -20,34 +20,17 @@ La API escucha en `http://localhost:7001/api`. La conexión de base de datos se 
 4. Toda solicitud `POST`, `PUT`, `PATCH` o `DELETE` a `/api` debe incluir también el token CSRF. El interceptor de Angular se encarga de obtenerlo y enviarlo.
 5. `POST /api/auth/logout` cierra la sesión y elimina su cookie.
 
-En desarrollo, la cookie de sesión se llama `oficiocr.session`; en producción usa `__Host-oficiocr.session` y HTTPS. La sesión vence a los 30 minutos. El ticket se conserva en la caché distribuida en memoria, por lo que reiniciar la API invalida las sesiones activas.
+La cookie de sesión se llama `oficiocr.session`, es HttpOnly y SameSite=Lax. La sesión vence a los 30 minutos y Spring Session la guarda en Redis, no en la memoria de la API. Así puede recuperarse después de reiniciar la API. En Docker Compose, Redis tiene un volumen persistente. El token CSRF se entrega por `GET /api/auth/csrf` y las operaciones que cambian datos requieren `X-CSRF-TOKEN`.
 
-### Usar al usuario de la sesión en un endpoint
+Para desplegar con HTTPS, activa `SESSION_COOKIE_SECURE=true` y configura `SESSION_COOKIE_NAME=__Host-oficiocr.session`.
 
-Añade `RequireAuthorization()` a la ruta e inyecta `CurrentUser`. Llama a `Get()` para recibir el ID, nombre, correo y rol ya autenticados:
+### Acceder al usuario actual desde el backend
 
-```csharp
-private static async Task<IResult> CreateAsync(
-    CreateRequest request,
-    CurrentUser currentUser,
-    AppDbContext database)
-{
-    var user = currentUser.Get();
-    if (user is null) return Results.Unauthorized();
+En controladores puedes inyectar `@AuthenticationPrincipal AuthController.Principal p`. En cualquier servicio o controlador también puedes inyectar `CurrentUser`: `currentUser.required()` devuelve el principal, `currentUser.id()`, `name()`, `email()` y `role()` dan sus campos, y `currentUser.optional()` permite consultar si hay sesión sin lanzar excepción. Usa el ID de la sesión para asociar datos; no aceptes del cliente un ID de propietario.
 
-    var record = new MyEntity
-    {
-        OwnerId = user.Id,
-        Name = request.Name
-    };
+### Sesión en Redis
 
-    database.Add(record);
-    await database.SaveChangesAsync();
-    return Results.Ok();
-}
-```
-
-Usa `user.Id` para asociar el registro. No recibas el ID del propietario desde el cliente: podría intentar enviar el ID de otra cuenta. `Get()` devuelve `null` si no encuentra un ID válido en la identidad de la solicitud. La autenticación y la lectura de esa identidad se configuran en `Configuration/AuthenticationExtensions.cs` y `Security/CurrentUser.cs`.
+Spring Session guarda el contexto de autenticación y la sesión HTTP en Redis. La cookie solo identifica la sesión; el backend recupera de Redis los datos y el usuario autenticado en cada solicitud. `docker compose up --build` inicia Redis junto con PostgreSQL y la API.
 
 ## Rutas principales
 

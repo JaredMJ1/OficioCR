@@ -19,4 +19,4 @@ Configura las variables necesarias en `.env` antes de iniciar el entorno. No sub
 - [Backend: API, cookies y sesión](backend/README.md)
 - [Frontend: estructura y ejecución](frontend/README.md)
 
-El backend usa una cookie de sesión `HttpOnly`. El navegador la envía automáticamente; la aplicación no guarda el token de sesión en `localStorage`.
+El backend Spring Boot usa una cookie de sesión `HttpOnly`. El navegador la envía automáticamente; la aplicación no guarda el token de sesión en `localStorage`.
