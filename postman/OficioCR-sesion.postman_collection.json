@@ -1,0 +1,90 @@
+{
+  "info": {
+    "name": "OficioCR - Sesion y usuario actual",
+    "description": "Flujo de humo: CSRF, registro, login, usuario actual, logout y rechazo tras logout.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.collectionVariables.get('email')) {",
+          "  pm.collectionVariables.set('email', `postman-${Date.now()}@example.test`);",
+          "}",
+          "pm.collectionVariables.set('password', 'PostmanTest!2026Aa');"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:7001" },
+    { "key": "email", "value": "" },
+    { "key": "password", "value": "" },
+    { "key": "csrfToken", "value": "" },
+    { "key": "userId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Obtener token CSRF",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/auth/csrf" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('CSRF responde 200', () => pm.response.to.have.status(200));",
+        "const body = pm.response.json();",
+        "pm.test('Incluye requestToken', () => pm.expect(body.requestToken).to.be.a('string').and.not.empty);",
+        "pm.collectionVariables.set('csrfToken', body.requestToken);"
+      ] } }]
+    },
+    {
+      "name": "2. Registrar usuario de prueba",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-CSRF-TOKEN", "value": "{{csrfToken}}" }],
+        "body": { "mode": "raw", "raw": "{\n  \"name\": \"Usuario Postman\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{baseUrl}}/api/auth/register"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Registro responde 201', () => pm.response.to.have.status(201));"
+      ] } }]
+    },
+    {
+      "name": "3. Iniciar sesion",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-CSRF-TOKEN", "value": "{{csrfToken}}" }],
+        "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{baseUrl}}/api/auth/login"
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Login responde 200', () => pm.response.to.have.status(200));",
+        "const body = pm.response.json();",
+        "pm.test('Devuelve la cuenta creada', () => pm.expect(body.user.email).to.eql(pm.collectionVariables.get('email')));",
+        "pm.collectionVariables.set('userId', body.user.id);"
+      ] } }]
+    },
+    {
+      "name": "4. Consultar usuario autenticado",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/auth/me" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Sesion permite GET /me', () => pm.response.to.have.status(200));",
+        "const body = pm.response.json();",
+        "pm.test('Devuelve el usuario de la sesion', () => { pm.expect(body.id).to.eql(pm.collectionVariables.get('userId')); pm.expect(body.email).to.eql(pm.collectionVariables.get('email')); });"
+      ] } }]
+    },
+    {
+      "name": "5. Cerrar sesion",
+      "request": { "method": "POST", "header": [{ "key": "X-CSRF-TOKEN", "value": "{{csrfToken}}" }], "url": "{{baseUrl}}/api/auth/logout" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Logout responde 204', () => pm.response.to.have.status(204));"
+      ] } }]
+    },
+    {
+      "name": "6. Verificar sesion cerrada",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/auth/me" },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Tras logout, /me responde 401', () => pm.response.to.have.status(401));"
+      ] } }]
+    }
+  ]
+}

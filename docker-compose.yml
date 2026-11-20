@@ -16,11 +16,25 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+  redis:
+    image: redis:7-alpine
+    container_name: oficiocr-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - oficiocr-sessions:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
   api:
-    build: ./backend/OficioCR.Api
+    build: ./backend/spring-api
     restart: unless-stopped
     environment:
-      DATABASE_URL: Host=postgres;Port=5432;Database=${POSTGRES_DB:-oficiocr};Username=${POSTGRES_USER:-oficiocr};Password=${POSTGRES_PASSWORD:-oficiocr_local}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-oficiocr}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-oficiocr}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-oficiocr_local}
       SUPERUSER_EMAIL: ${SUPERUSER_EMAIL:-admin@oficiocr.local}
       SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD:-AdminOficioCR!2026}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:4200,http://127.0.0.1:4200}
@@ -31,12 +45,17 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM:-}
-      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
-      ASPNETCORE_URLS: http://+:8080
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-development}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      SERVER_PORT: 8080
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "7001:8080"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
   frontend:
     build: ./frontend
@@ -47,3 +66,4 @@ services:
       - api
 volumes:
   oficiocr-data:
+  oficiocr-sessions:
